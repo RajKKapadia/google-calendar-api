@@ -14,9 +14,9 @@ export class CalendarController {
     static async getUpcomingFreeSlots(req: Request, res: Response) {
         try {
             // Get current time in Asia/Kolkata timezone
-            const now = dayjs.tz(TIMEZONE);
+            const now = dayjs().tz(TIMEZONE);
             const todayDayOfWeek = now.format('dddd');
-            
+
             let checkDate: dayjs.Dayjs | null = null;
             let allSlots: string[] = [];
             const maxSlots = 4;
@@ -29,7 +29,7 @@ export class CalendarController {
                 if (todaySchedule) {
                     const todayDateStr = now.format('DD/MM/YYYY');
                     const scheduleEnd = parseDateTime(todayDateStr, todaySchedule.end);
-                    
+
                     // Check if current time is before schedule end time
                     if (now.isBefore(scheduleEnd)) {
                         // Check today starting from rounded current time
@@ -44,23 +44,23 @@ export class CalendarController {
             if (allSlots.length < maxSlots) {
                 // Start from next working day (skip today if we already checked it)
                 checkDate = getNextWorkingDay(now);
-                
+
                 while (allSlots.length < maxSlots && checkDate && attempts < maxAttempts) {
                     const dayOfWeek = checkDate.format('dddd');
                     const daySchedule = getScheduleForDay(dayOfWeek);
-                    
+
                     if (daySchedule) {
                         const dateStr = checkDate.format('DD/MM/YYYY');
                         const startTime = parseDateTime(dateStr, daySchedule.start);
                         const endTime = parseDateTime(dateStr, daySchedule.end);
-                        
+
                         if (startTime.isValid() && endTime.isValid()) {
                             const slotsNeeded = maxSlots - allSlots.length;
                             const daySlots = await calendarService.findFreeSlots(startTime, endTime, slotsNeeded);
                             allSlots.push(...daySlots);
                         }
                     }
-                    
+
                     // Move to next working day
                     checkDate = getNextWorkingDay(checkDate);
                     attempts++;
@@ -71,6 +71,7 @@ export class CalendarController {
             const finalSlots = allSlots.slice(0, maxSlots);
             res.json({ slots: finalSlots });
         } catch (error) {
+            console.error('Error fetching slots:', error);
             res.status(500).json({ error: 'Failed to fetch slots' });
         }
     }
@@ -108,6 +109,7 @@ export class CalendarController {
                 slots
             });
         } catch (error) {
+            console.error('Error fetching day slots:', error);
             res.status(500).json({ error: 'Failed to fetch slots' });
         }
     }
@@ -125,6 +127,7 @@ export class CalendarController {
                 message: isAvailable ? 'Slot is free' : 'Slot is busy'
             });
         } catch (error) {
+            console.error('Error checking availability:', error);
             res.status(500).json({ error: 'Failed to check availability' });
         }
     }

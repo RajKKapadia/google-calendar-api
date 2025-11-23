@@ -33,7 +33,7 @@ export const getISOString = (date: dayjs.Dayjs) => {
 export const parseFromGoogleCalendar = (dateString: string | undefined): dayjs.Dayjs => {
     if (!dateString) {
         // Return current time in Asia/Kolkata timezone as fallback
-        return dayjs.tz(TIMEZONE);
+        return dayjs().tz(TIMEZONE);
     }
     // Google Calendar API returns UTC ISO strings, convert to Asia/Kolkata
     return dayjs.utc(dateString).tz(TIMEZONE);
